@@ -24,24 +24,25 @@
 ### Key Technical Decisions
 
 #### 1. State Management Pattern
-**Decision:** Arc<Mutex<HashMap>> for shared state
+**Decision:** Trait-based abstraction with multiple backends
 **Rationale:** 
-- Simple to understand and implement
-- Thread-safe with clear ownership semantics
-- Rust's ownership system prevents data races
-- Appropriate for educational/mock server scale
+- Educational value showing abstraction patterns
+- Production-ready with Redis support
+- Maintains simplicity for development scenarios
+- Demonstrates async programming patterns
 
-**Alternative Considered:**
-- Database storage (rejected for simplicity)
-- RwLock (rejected due to complexity for demo)
-- Actor pattern (noted for future enhancement)
+**Implementation Options:**
+- **InMemoryStore:** Arc<Mutex<HashMap>> for development
+- **RedisStore:** Async Redis client for production
+- Unified StateStore trait for consistent interface
 
 **Implementation Context:**
-- TransactionData struct stores complete state per transaction
-- HashMap keyed by UUID (threeDSServerTransID)
-- Mutex ensures atomic operations across all endpoints
-- Arc enables sharing across Actix-web worker threads
+- TransactionData struct serializable for Redis storage
+- UUID-based keys with configurable TTL
+- Async operations throughout the stack
+- Environment-based configuration (USE_REDIS)
 - Data persisted across API calls: version → authenticate → results → final
+- Automatic cleanup via Redis TTL (30 min default)
 
 #### 2. Data Modeling Strategy  
 **Decision:** Derive macros for automatic serialization

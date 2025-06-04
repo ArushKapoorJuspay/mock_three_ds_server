@@ -1,9 +1,10 @@
 use actix_web::{web, HttpResponse, Result};
 use uuid::Uuid;
 use base64::{Engine as _, engine::general_purpose};
+use std::sync::Arc;
 
 use crate::models::*;
-use crate::state::{AppState, TransactionData};
+use crate::state_store::{StateStore, TransactionData};
 
 pub async fn version_handler(req: web::Json<VersionRequest>) -> Result<HttpResponse> {
     // Generate a new transaction ID for this session
@@ -39,7 +40,7 @@ pub async fn version_handler(req: web::Json<VersionRequest>) -> Result<HttpRespo
 
 pub async fn authenticate_handler(
     req: web::Json<AuthenticateRequest>,
-    state: web::Data<AppState>,
+    state: web::Data<Arc<Box<dyn StateStore>>>,
 ) -> Result<HttpResponse> {
     let three_ds_server_trans_id = req.three_ds_server_trans_id;
     let acs_trans_id = Uuid::new_v4();
@@ -156,7 +157,11 @@ pub async fn authenticate_handler(
         results_request: None,
     };
     
-    state.lock().unwrap().insert(three_ds_server_trans_id, transaction_data);
+    if let Err(e) = state.insert(three_ds_server_trans_id, transaction_data).await {
+        return Ok(HttpResponse::InternalServerError().json(serde_json::json!({
+            "error": format!("Failed to store transaction data: {}", e)
+        })));
+    }
 
     // Create challenge request (used when challenge is required)
     let challenge_request = ChallengeRequest {
@@ -265,43 +270,24 @@ pub async fn authenticate_handler(
 
 pub async fn results_handler(
     req: web::Json<ResultsRequest>,
-    state: web::Data<AppState>,
+    state: web::Data<Arc<Box<dyn StateStore>>>,
 ) -> Result<HttpResponse> {
     let three_ds_server_trans_id = req.three_ds_server_trans_id;
     
-    // Store the results request in state
-    let mut state_guard = state.lock().unwrap();
-    if let Some(transaction_data) = state_guard.get_mut(&three_ds_server_trans_id) {
-        transaction_data.results_request = Some(req.into_inner());
-        
-        let response = ResultsResponse {
-            ds_trans_id: transaction_data.ds_trans_id,
-            message_type: "RRes".to_string(),
-            three_ds_server_trans_id,
-            acs_trans_id: transaction_data.acs_trans_id,
-            sdk_trans_id: transaction_data.sdk_trans_id,
-            results_status: "01".to_string(),
-            message_version: "2.2.0".to_string(),
-        };
-        
-        Ok(HttpResponse::Ok().json(response))
-    } else {
-        Ok(HttpResponse::BadRequest().json(serde_json::json!({
-            "error": "Transaction not found"
-        })))
-    }
-}
-
-pub async fn final_handler(
-    req: web::Json<FinalRequest>,
-    state: web::Data<AppState>,
-) -> Result<HttpResponse> {
-    let three_ds_server_trans_id = req.three_ds_server_trans_id;
-    
-    let state_guard = state.lock().unwrap();
-    if let Some(transaction_data) = state_guard.get(&three_ds_server_trans_id) {
-        if let Some(results_request) = &transaction_data.results_request {
-            let results_response = ResultsResponse {
+    // Get the existing transaction data
+    match state.get(&three_ds_server_trans_id).await {
+        Ok(Some(mut transaction_data)) => {
+            // Update the transaction data with results request
+            transaction_data.results_request = Some(req.into_inner());
+            
+            // Store the updated transaction data
+            if let Err(e) = state.update(&three_ds_server_trans_id, transaction_data.clone()).await {
+                return Ok(HttpResponse::InternalServerError().json(serde_json::json!({
+                    "error": format!("Failed to update transaction data: {}", e)
+                })));
+            }
+            
+            let response = ResultsResponse {
                 ds_trans_id: transaction_data.ds_trans_id,
                 message_type: "RRes".to_string(),
                 three_ds_server_trans_id,
@@ -311,24 +297,65 @@ pub async fn final_handler(
                 message_version: "2.2.0".to_string(),
             };
             
-            let response = FinalResponse {
-                eci: results_request.eci.clone(),
-                authentication_value: results_request.authentication_value.clone(),
-                three_ds_server_trans_id,
-                results_response,
-                results_request: results_request.clone(),
-                trans_status: results_request.trans_status.clone(),
-            };
-            
             Ok(HttpResponse::Ok().json(response))
-        } else {
+        }
+        Ok(None) => {
             Ok(HttpResponse::BadRequest().json(serde_json::json!({
-                "error": "Results not found for this transaction"
+                "error": "Transaction not found"
             })))
         }
-    } else {
-        Ok(HttpResponse::BadRequest().json(serde_json::json!({
-            "error": "Transaction not found"
-        })))
+        Err(e) => {
+            Ok(HttpResponse::InternalServerError().json(serde_json::json!({
+                "error": format!("Failed to retrieve transaction data: {}", e)
+            })))
+        }
+    }
+}
+
+pub async fn final_handler(
+    req: web::Json<FinalRequest>,
+    state: web::Data<Arc<Box<dyn StateStore>>>,
+) -> Result<HttpResponse> {
+    let three_ds_server_trans_id = req.three_ds_server_trans_id;
+    
+    match state.get(&three_ds_server_trans_id).await {
+        Ok(Some(transaction_data)) => {
+            if let Some(results_request) = &transaction_data.results_request {
+                let results_response = ResultsResponse {
+                    ds_trans_id: transaction_data.ds_trans_id,
+                    message_type: "RRes".to_string(),
+                    three_ds_server_trans_id,
+                    acs_trans_id: transaction_data.acs_trans_id,
+                    sdk_trans_id: transaction_data.sdk_trans_id,
+                    results_status: "01".to_string(),
+                    message_version: "2.2.0".to_string(),
+                };
+                
+                let response = FinalResponse {
+                    eci: results_request.eci.clone(),
+                    authentication_value: results_request.authentication_value.clone(),
+                    three_ds_server_trans_id,
+                    results_response,
+                    results_request: results_request.clone(),
+                    trans_status: results_request.trans_status.clone(),
+                };
+                
+                Ok(HttpResponse::Ok().json(response))
+            } else {
+                Ok(HttpResponse::BadRequest().json(serde_json::json!({
+                    "error": "Results not found for this transaction"
+                })))
+            }
+        }
+        Ok(None) => {
+            Ok(HttpResponse::BadRequest().json(serde_json::json!({
+                "error": "Transaction not found"
+            })))
+        }
+        Err(e) => {
+            Ok(HttpResponse::InternalServerError().json(serde_json::json!({
+                "error": format!("Failed to retrieve transaction data: {}", e)
+            })))
+        }
     }
 }

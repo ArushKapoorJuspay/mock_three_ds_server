@@ -26,7 +26,7 @@ pub struct CardRange {
 }
 
 // Authenticate API Models
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct AuthenticateRequest {
     pub three_ds_server_trans_id: Uuid,
@@ -45,7 +45,7 @@ pub struct AuthenticateRequest {
     pub device_render_options: DeviceRenderOptions,
 }
 
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct ThreeDSRequestor {
     pub three_ds_requestor_authentication_ind: String,
@@ -53,14 +53,14 @@ pub struct ThreeDSRequestor {
     pub three_ds_requestor_challenge_ind: String,
 }
 
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct ThreeDSRequestorAuthenticationInfo {
     pub three_ds_req_auth_method: String,
     pub three_ds_req_auth_timestamp: String,
 }
 
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct CardholderAccount {
     pub acct_type: String,
@@ -70,7 +70,7 @@ pub struct CardholderAccount {
     pub card_security_code: String,
 }
 
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct Cardholder {
     pub addr_match: String,
@@ -99,7 +99,7 @@ pub struct Phone {
     pub subscriber: String,
 }
 
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct Purchase {
     pub purchase_instal_data: u32,
@@ -112,14 +112,14 @@ pub struct Purchase {
     pub trans_type: String,
 }
 
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct Acquirer {
     pub acquirer_bin: String,
     pub acquirer_merchant_id: String,
 }
 
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct Merchant {
     pub mcc: String,
@@ -131,7 +131,7 @@ pub struct Merchant {
     pub notification_url: String,
 }
 
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct BrowserInformation {
     pub browser_accept_header: String,
@@ -149,7 +149,7 @@ pub struct BrowserInformation {
     pub browser_javascript_enabled: bool,
 }
 
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct DeviceRenderOptions {
     pub sdk_interface: String,

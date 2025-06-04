@@ -16,6 +16,8 @@ Build a complete mock 3D Secure (3DS) authentication server in Rust that simulat
    - Maintain transaction data across multiple API calls
    - Thread-safe concurrent access
    - UUID-based transaction tracking
+   - Flexible storage backends (in-memory and Redis)
+   - Configurable persistence and TTL support
 
 3. **Business Logic:**
    - Challenge flow for cards ending in "4001" (transStatus: "C")
@@ -44,8 +46,8 @@ Build a complete mock 3D Secure (3DS) authentication server in Rust that simulat
 
 ### Constraints
 - Mock server only (no real payment processing)
-- In-memory state storage (for simplicity)
-- Focus on educational value over production scalability
+- Default in-memory state storage (with Redis option for production)
+- Focus on educational value while supporting production patterns
 - Must be testable via Postman/curl
 
 ### Target Audience

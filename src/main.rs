@@ -2,10 +2,10 @@
 
 mod handlers;
 mod models;
-mod state;
+mod state_store;
 
 use actix_web::{middleware, web, App, HttpServer};
-use state::create_app_state;
+use state_store::create_state_store;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -13,7 +13,10 @@ async fn main() -> std::io::Result<()> {
     env_logger::init_from_env(env_logger::Env::new().default_filter_or("info"));
 
     // Create shared application state
-    let app_state = create_app_state();
+    let app_state = std::sync::Arc::new(create_state_store().await.unwrap_or_else(|e| {
+        eprintln!("Failed to initialize state store: {}", e);
+        std::process::exit(1);
+    }));
 
     println!("Starting 3DS Mock Server on http://localhost:8080");
     println!("Available endpoints:");

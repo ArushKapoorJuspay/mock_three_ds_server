@@ -10,10 +10,14 @@
    - ✅ `POST /3ds/final` - Final authentication package retrieval
 
 2. **State Management System**
-   - ✅ Thread-safe transaction storage using Arc<Mutex<HashMap>>
+   - ✅ Trait-based abstraction with StateStore interface
+   - ✅ InMemoryStore backend (Arc<Mutex<HashMap>>) for development
+   - ✅ RedisStore backend for production persistence
+   - ✅ Environment-based configuration (USE_REDIS, REDIS_URL, TTL)
    - ✅ UUID-based transaction tracking
-   - ✅ Cross-request data persistence
+   - ✅ Cross-request data persistence with automatic TTL
    - ✅ Concurrent access handling without data corruption
+   - ✅ Async state operations throughout the system
 
 3. **Enhanced Business Logic Implementation**
    - ✅ Sophisticated challenge indicator priority system (threeDSRequestorChallengeInd)
@@ -159,11 +163,11 @@
 ## Known Issues 🐛
 
 ### Current Limitations (By Design)
-1. **In-Memory State Storage**
-   - **Issue:** Data lost on server restart
-   - **Impact:** Development/testing only
-   - **Mitigation:** Documented as educational constraint
-   - **Resolution:** Database integration examples provided
+1. **Default In-Memory State Storage**
+   - **Issue:** Data lost on server restart (in-memory mode)
+   - **Impact:** Development/testing only for in-memory mode
+   - **Mitigation:** Redis backend available for persistence
+   - **Resolution:** ✅ Redis integration implemented with environment configuration
 
 2. **Single Mutex Bottleneck**
    - **Issue:** All state access serialized

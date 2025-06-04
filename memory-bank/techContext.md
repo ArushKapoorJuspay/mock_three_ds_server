@@ -47,6 +47,22 @@
 - Field renaming (camelCase ↔ snake_case)
 - Optional fields and default values
 - Custom serialization for complex types
+- Redis JSON storage serialization
+
+#### State Storage: Redis 0.25
+**Why Chosen:**
+- Industry-standard for distributed state management
+- High-performance async operations
+- Built-in TTL and expiration handling
+- Production-ready scaling capabilities
+- Educational value for distributed systems
+
+**Features Used:**
+- Async connection management
+- JSON serialization for Redis storage
+- Automatic TTL (Time To Live) support
+- Environment-based configuration
+- Graceful fallback to in-memory storage
 
 ### Supporting Libraries
 
@@ -165,6 +181,9 @@ chrono = { version = "0.4", features = ["serde"] }      # Date/time
 tokio = { version = "1", features = ["full"] }          # Async runtime
 base64 = "0.21"                    # Base64 encoding
 env_logger = "0.10"                # Logging
+redis = { version = "0.25", features = ["aio", "tokio-comp"] }  # Redis client
+async-trait = "0.1"                # Async traits for state abstraction
+thiserror = "1.0"                  # Error handling derive macros
 ```
 
 ### Dependency Security
