@@ -1,6 +1,8 @@
 use async_trait::async_trait;
 use uuid::Uuid;
 use serde::{Serialize, Deserialize};
+use deadpool_redis::{Config, Pool, Runtime};
+use std::time::Duration;
 
 use crate::config::Settings;
 use crate::models::{AuthenticateRequest, ResultsRequest};
@@ -21,7 +23,9 @@ pub enum StateError {
     #[error("Serialization error: {0}")]
     Serialization(#[from] serde_json::Error),
     #[error("Redis error: {0}")]
-    Redis(#[from] redis::RedisError),
+    Redis(#[from] deadpool_redis::redis::RedisError),
+    #[error("Pool error: {0}")]
+    Pool(#[from] deadpool_redis::PoolError),
     #[error("Connection error: {0}")]
     Connection(String),
 }
@@ -34,31 +38,40 @@ pub trait StateStore: Send + Sync {
     async fn delete(&self, key: &Uuid) -> Result<(), StateError>;
 }
 
-// Redis implementation (Redis-only state store)
+// Redis implementation with connection pooling (Redis-only state store)
 pub struct RedisStore {
-    client: redis::Client,
+    pool: Pool,
     ttl_seconds: u64,
     key_prefix: String,
 }
 
 impl RedisStore {
     pub async fn new(settings: &Settings) -> Result<Self, StateError> {
-        let client = redis::Client::open(settings.redis.url.as_str())
-            .map_err(|e| StateError::Connection(format!("Failed to create Redis client: {}", e)))?;
+        // Configure connection pool
+        let cfg = Config::from_url(&settings.redis.url);
+        let pool = cfg
+            .builder()
+            .map_err(|e| StateError::Connection(format!("Failed to create pool builder: {}", e)))?
+            .max_size(settings.redis.pool.max_size as usize)
+            .runtime(Runtime::Tokio1)
+            .build()
+            .map_err(|e| StateError::Connection(format!("Failed to create connection pool: {}", e)))?;
         
-        // Test the connection
-        let mut conn = client.get_async_connection().await
-            .map_err(|e| StateError::Connection(format!("Failed to connect to Redis: {}", e)))?;
+        // Test the connection pool
+        let mut conn = pool.get().await?;
         
         // Simple ping test
-        let _: String = redis::cmd("PING").query_async(&mut conn).await?;
+        let _: String = deadpool_redis::redis::cmd("PING")
+            .query_async(&mut *conn)
+            .await?;
 
-        println!("✅ Redis connection established: {}", settings.redis.url);
+        println!("✅ Redis connection pool established: {}", settings.redis.url);
+        println!("📊 Pool size: {} (min idle: {})", settings.redis.pool.max_size, settings.redis.pool.min_idle);
         println!("📝 Transaction TTL: {} seconds", settings.redis.ttl_seconds);
         println!("🔑 Key prefix: {}", settings.redis.key_prefix);
 
         Ok(Self {
-            client,
+            pool,
             ttl_seconds: settings.redis.ttl_seconds,
             key_prefix: settings.redis.key_prefix.clone(),
         })
@@ -67,79 +80,116 @@ impl RedisStore {
     fn make_key(&self, key: &Uuid) -> String {
         format!("{}:{}", self.key_prefix, key)
     }
+
+    // Simple retry mechanism for Redis operations
+    async fn with_retry<F, Fut, R>(&self, operation: F) -> Result<R, StateError>
+    where
+        F: Fn() -> Fut,
+        Fut: std::future::Future<Output = Result<R, StateError>>,
+    {
+        const MAX_RETRIES: u32 = 3;
+        
+        for attempt in 1..=MAX_RETRIES {
+            match operation().await {
+                Ok(result) => return Ok(result),
+                Err(StateError::Redis(_)) | Err(StateError::Pool(_)) if attempt < MAX_RETRIES => {
+                    // Wait before retrying
+                    tokio::time::sleep(Duration::from_millis(100 * attempt as u64)).await;
+                    continue;
+                }
+                Err(e) => return Err(e),
+            }
+        }
+        
+        unreachable!()
+    }
 }
 
 #[async_trait]
 impl StateStore for RedisStore {
     async fn insert(&self, key: Uuid, data: TransactionData) -> Result<(), StateError> {
-        let mut conn = self.client.get_async_connection().await?;
         let redis_key = self.make_key(&key);
-        let serialized_data = serde_json::to_string(&data)?;
+        let ttl_seconds = self.ttl_seconds;
         
-        redis::cmd("SETEX")
-            .arg(&redis_key)
-            .arg(self.ttl_seconds)
-            .arg(&serialized_data)
-            .query_async(&mut conn)
-            .await?;
-        
-        Ok(())
+        self.with_retry(|| async {
+            let mut conn = self.pool.get().await?;
+            let serialized_data = serde_json::to_string(&data)?;
+            
+            deadpool_redis::redis::cmd("SETEX")
+                .arg(&redis_key)
+                .arg(ttl_seconds)
+                .arg(&serialized_data)
+                .query_async::<_, ()>(&mut *conn)
+                .await?;
+            
+            Ok(())
+        }).await
     }
 
     async fn get(&self, key: &Uuid) -> Result<Option<TransactionData>, StateError> {
-        let mut conn = self.client.get_async_connection().await?;
         let redis_key = self.make_key(key);
         
-        let result: Option<String> = redis::cmd("GET")
-            .arg(&redis_key)
-            .query_async(&mut conn)
-            .await?;
-        
-        match result {
-            Some(data_str) => {
-                let data: TransactionData = serde_json::from_str(&data_str)?;
-                Ok(Some(data))
+        self.with_retry(|| async {
+            let mut conn = self.pool.get().await?;
+            
+            let result: Option<String> = deadpool_redis::redis::cmd("GET")
+                .arg(&redis_key)
+                .query_async(&mut *conn)
+                .await?;
+            
+            match result {
+                Some(data_str) => {
+                    let data: TransactionData = serde_json::from_str(&data_str)?;
+                    Ok(Some(data))
+                }
+                None => Ok(None),
             }
-            None => Ok(None),
-        }
+        }).await
     }
 
     async fn update(&self, key: &Uuid, data: TransactionData) -> Result<(), StateError> {
-        let mut conn = self.client.get_async_connection().await?;
         let redis_key = self.make_key(key);
+        let ttl_seconds = self.ttl_seconds;
         
-        // Check if key exists first
-        let exists: bool = redis::cmd("EXISTS")
-            .arg(&redis_key)
-            .query_async(&mut conn)
-            .await?;
-        
-        if !exists {
-            return Err(StateError::NotFound);
-        }
-        
-        let serialized_data = serde_json::to_string(&data)?;
-        
-        redis::cmd("SETEX")
-            .arg(&redis_key)
-            .arg(self.ttl_seconds)
-            .arg(&serialized_data)
-            .query_async(&mut conn)
-            .await?;
-        
-        Ok(())
+        self.with_retry(|| async {
+            let mut conn = self.pool.get().await?;
+            
+            // Check if key exists first
+            let exists: bool = deadpool_redis::redis::cmd("EXISTS")
+                .arg(&redis_key)
+                .query_async(&mut *conn)
+                .await?;
+            
+            if !exists {
+                return Err(StateError::NotFound);
+            }
+            
+            let serialized_data = serde_json::to_string(&data)?;
+            
+            deadpool_redis::redis::cmd("SETEX")
+                .arg(&redis_key)
+                .arg(ttl_seconds)
+                .arg(&serialized_data)
+                .query_async::<_, ()>(&mut *conn)
+                .await?;
+            
+            Ok(())
+        }).await
     }
 
     async fn delete(&self, key: &Uuid) -> Result<(), StateError> {
-        let mut conn = self.client.get_async_connection().await?;
         let redis_key = self.make_key(key);
         
-        redis::cmd("DEL")
-            .arg(&redis_key)
-            .query_async(&mut conn)
-            .await?;
-        
-        Ok(())
+        self.with_retry(|| async {
+            let mut conn = self.pool.get().await?;
+            
+            deadpool_redis::redis::cmd("DEL")
+                .arg(&redis_key)
+                .query_async::<_, ()>(&mut *conn)
+                .await?;
+            
+            Ok(())
+        }).await
     }
 }
 

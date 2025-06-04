@@ -6,6 +6,10 @@ use std::env;
 pub struct Settings {
     pub server: ServerConfig,
     pub redis: RedisConfig,
+    pub performance: PerformanceConfig,
+    pub monitoring: MonitoringConfig,
+    pub retry: RetryConfig,
+    pub cache: CacheConfig,
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
@@ -13,6 +17,41 @@ pub struct ServerConfig {
     pub host: String,
     pub port: u16,
     pub log_level: String,
+    pub workers: Option<usize>,
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone)]
+pub struct PerformanceConfig {
+    pub enable_compression: bool,
+    pub enable_metrics: bool,
+    pub cache_size: usize,
+    pub rate_limit_per_second: u32,
+    pub max_connections: usize,
+    pub client_timeout_ms: u64,
+    pub keep_alive_seconds: u64,
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone)]
+pub struct MonitoringConfig {
+    pub metrics_endpoint: String,
+    pub health_endpoint: String,
+    pub enable_tracing: bool,
+    pub request_timeout_seconds: u64,
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone)]
+pub struct RetryConfig {
+    pub max_attempts: u32,
+    pub initial_delay_ms: u64,
+    pub max_delay_ms: u64,
+    pub multiplier: f64,
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone)]
+pub struct CacheConfig {
+    pub card_range_ttl_seconds: u64,
+    pub challenge_decision_ttl_seconds: u64,
+    pub static_response_ttl_seconds: u64,
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
@@ -105,6 +144,7 @@ mod tests {
                 host: "127.0.0.1".to_string(),
                 port: 8080,
                 log_level: "info".to_string(),
+                workers: Some(1),
             },
             redis: RedisConfig {
                 url: "redis://127.0.0.1:6379".to_string(),
@@ -122,6 +162,32 @@ mod tests {
                     idle_timeout_seconds: 300,
                 },
             },
+            performance: PerformanceConfig {
+                enable_compression: false,
+                enable_metrics: true,
+                cache_size: 1000,
+                rate_limit_per_second: 100,
+                max_connections: 1000,
+                client_timeout_ms: 60000,
+                keep_alive_seconds: 60,
+            },
+            monitoring: MonitoringConfig {
+                metrics_endpoint: "/metrics".to_string(),
+                health_endpoint: "/health".to_string(),
+                enable_tracing: false,
+                request_timeout_seconds: 30,
+            },
+            retry: RetryConfig {
+                max_attempts: 3,
+                initial_delay_ms: 100,
+                max_delay_ms: 5000,
+                multiplier: 2.0,
+            },
+            cache: CacheConfig {
+                card_range_ttl_seconds: 3600,
+                challenge_decision_ttl_seconds: 300,
+                static_response_ttl_seconds: 86400,
+            },
         };
 
         assert!(settings.validate().is_ok());
@@ -129,15 +195,112 @@ mod tests {
 
     #[test]
     fn test_invalid_redis_url() {
-        let mut settings = Settings::default();
-        settings.redis.url = "invalid://url".to_string();
+        let mut settings = Settings {
+            server: ServerConfig {
+                host: "127.0.0.1".to_string(),
+                port: 8080,
+                log_level: "info".to_string(),
+                workers: Some(1),
+            },
+            redis: RedisConfig {
+                url: "invalid://url".to_string(),
+                ttl_seconds: 1800,
+                key_prefix: "test".to_string(),
+                connection: ConnectionConfig {
+                    timeout_ms: 5000,
+                    max_retries: 3,
+                    retry_delay_ms: 1000,
+                },
+                pool: PoolConfig {
+                    max_size: 10,
+                    min_idle: 2,
+                    connection_timeout_seconds: 10,
+                    idle_timeout_seconds: 300,
+                },
+            },
+            performance: PerformanceConfig {
+                enable_compression: false,
+                enable_metrics: true,
+                cache_size: 1000,
+                rate_limit_per_second: 100,
+                max_connections: 1000,
+                client_timeout_ms: 60000,
+                keep_alive_seconds: 60,
+            },
+            monitoring: MonitoringConfig {
+                metrics_endpoint: "/metrics".to_string(),
+                health_endpoint: "/health".to_string(),
+                enable_tracing: false,
+                request_timeout_seconds: 30,
+            },
+            retry: RetryConfig {
+                max_attempts: 3,
+                initial_delay_ms: 100,
+                max_delay_ms: 5000,
+                multiplier: 2.0,
+            },
+            cache: CacheConfig {
+                card_range_ttl_seconds: 3600,
+                challenge_decision_ttl_seconds: 300,
+                static_response_ttl_seconds: 86400,
+            },
+        };
         
         assert!(settings.validate().is_err());
     }
 
     #[test]
     fn test_server_address() {
-        let settings = Settings::default();
+        let settings = Settings {
+            server: ServerConfig {
+                host: "127.0.0.1".to_string(),
+                port: 8080,
+                log_level: "info".to_string(),
+                workers: Some(1),
+            },
+            redis: RedisConfig {
+                url: "redis://127.0.0.1:6379".to_string(),
+                ttl_seconds: 1800,
+                key_prefix: "test".to_string(),
+                connection: ConnectionConfig {
+                    timeout_ms: 5000,
+                    max_retries: 3,
+                    retry_delay_ms: 1000,
+                },
+                pool: PoolConfig {
+                    max_size: 10,
+                    min_idle: 2,
+                    connection_timeout_seconds: 10,
+                    idle_timeout_seconds: 300,
+                },
+            },
+            performance: PerformanceConfig {
+                enable_compression: false,
+                enable_metrics: true,
+                cache_size: 1000,
+                rate_limit_per_second: 100,
+                max_connections: 1000,
+                client_timeout_ms: 60000,
+                keep_alive_seconds: 60,
+            },
+            monitoring: MonitoringConfig {
+                metrics_endpoint: "/metrics".to_string(),
+                health_endpoint: "/health".to_string(),
+                enable_tracing: false,
+                request_timeout_seconds: 30,
+            },
+            retry: RetryConfig {
+                max_attempts: 3,
+                initial_delay_ms: 100,
+                max_delay_ms: 5000,
+                multiplier: 2.0,
+            },
+            cache: CacheConfig {
+                card_range_ttl_seconds: 3600,
+                challenge_decision_ttl_seconds: 300,
+                static_response_ttl_seconds: 86400,
+            },
+        };
         assert_eq!(settings.server_address(), "127.0.0.1:8080");
     }
 }

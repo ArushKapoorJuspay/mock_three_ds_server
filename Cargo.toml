@@ -4,7 +4,8 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-actix-web = "4"
+# Core web framework
+actix-web = { version = "4", features = ["compress-gzip", "compress-brotli"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 uuid = { version = "1.6", features = ["v4", "serde"] }
@@ -12,7 +13,29 @@ chrono = { version = "0.4", features = ["serde"] }
 tokio = { version = "1", features = ["full"] }
 base64 = "0.21"
 env_logger = "0.10"
+
+# Redis with connection pooling
 redis = { version = "0.25", features = ["aio", "tokio-comp"] }
+deadpool-redis = "0.14"
+
+# Configuration and error handling
 async-trait = "0.1"
 thiserror = "1.0"
 config = { version = "0.13", features = ["toml"] }
+
+# Performance monitoring
+actix-web-prom = "0.6"
+prometheus = "0.13"
+
+# Retry and resilience
+backoff = { version = "0.4", features = ["tokio"] }
+
+# Caching
+lru = "0.12"
+
+# Rate limiting
+actix-governor = "0.4"
+governor = "0.6"
+
+# Health checks
+tokio-util = "0.7"
