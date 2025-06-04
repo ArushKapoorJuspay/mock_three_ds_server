@@ -161,8 +161,10 @@ pub struct DeviceRenderOptions {
 #[serde(rename_all = "camelCase")]
 pub struct AuthenticateResponse {
     pub purchase_date: String,
-    pub base64_encoded_challenge_request: String,
-    pub acs_url: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub base64_encoded_challenge_request: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub acs_url: Option<String>,
     pub three_ds_server_trans_id: Uuid,
     pub authentication_response: AuthenticationResponse,
     pub challenge_request: ChallengeRequest,
@@ -174,19 +176,63 @@ pub struct AuthenticateResponse {
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AuthenticationResponse {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub three_ds_requestor_app_url_ind: Option<String>,
     #[serde(rename = "acsOperatorID")]
     pub acs_operator_id: String,
     pub ds_reference_number: String,
-    pub acs_url: String,
+    pub eci: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub acs_signed_content: Option<String>,
     pub ds_trans_id: Uuid,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub acs_rendering_type: Option<AcsRenderingTypeResponse>,
     pub message_type: String,
     pub three_ds_server_trans_id: Uuid,
     pub acs_trans_id: Uuid,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub broad_info: Option<BroadInfo>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub authentication_method: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub trans_status_reason: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub device_info_recognised_version: Option<String>,
     pub acs_challenge_mandated: String,
     pub authentication_type: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub sdk_trans_id: Option<Uuid>,
+    pub authentication_value: String,
     pub trans_status: String,
     pub message_version: String,
     pub acs_reference_number: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub acs_url: Option<String>,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AcsRenderingTypeResponse {
+    pub device_user_interface_mode: String,
+    pub acs_interface: String,
+    pub acs_ui_template: String,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct BroadInfo {
+    pub category: String,
+    pub severity: String,
+    pub source: String,
+    pub recipients: Vec<String>,
+    pub description: BroadInfoDescription,
+    pub exp_date: String,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct BroadInfoDescription {
+    pub message: String,
 }
 
 #[derive(Debug, Serialize)]
