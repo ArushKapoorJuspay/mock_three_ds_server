@@ -7,25 +7,24 @@ The 3DS Mock Server now uses TOML configuration files for all settings. Redis is
 ## Configuration Files
 
 ### File Hierarchy
-1. `config/default.toml` - Base configuration (always loaded)
-2. `config/{RUN_MODE}.toml` - Environment-specific overrides
-3. Environment variables with `APP_` prefix - Highest priority
+1. `config/{RUN_MODE}.toml` - Environment-specific configuration (required)
+2. Environment variables with `APP_` prefix - Highest priority
 
 ### Available Configuration Files
 
-#### `config/default.toml`
-Base configuration with sensible defaults for development.
-
 #### `config/development.toml`
-Development overrides including:
+Complete development configuration including:
+- Local server binding (127.0.0.1)
 - Debug logging level
 - Shorter Redis TTL (5 minutes) for faster testing
+- Standard connection pool settings
 
 #### `config/production.toml`
-Production overrides including:
+Complete production configuration including:
 - Bind to all interfaces (0.0.0.0)
 - Warning-level logging
-- Larger Redis connection pool
+- Standard Redis TTL (30 minutes)
+- Larger Redis connection pool for high throughput
 
 ## Configuration Structure
 
@@ -174,9 +173,10 @@ APP_REDIS__URL=redis://localhost:6380 cargo run
 ### Application Won't Start
 
 #### "Failed to load configuration"
-- Ensure `config/default.toml` exists
+- Ensure the appropriate environment config file exists (`config/development.toml` or `config/production.toml`)
 - Check TOML syntax for errors
 - Verify file permissions
+- Ensure RUN_MODE environment variable matches an existing config file
 
 #### "Configuration validation failed"
 - Check Redis URL format

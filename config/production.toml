@@ -1,13 +1,22 @@
-# Production configuration overrides
+# Production configuration for 3DS Mock Server
 
 [server]
 host = "0.0.0.0"
+port = 8080
 log_level = "warn"
 
 [redis]
-# Production Redis URL should be set via environment variable
-# Example: APP_REDIS__URL=redis://prod-redis:6379
+url = "redis://127.0.0.1:6379"
+ttl_seconds = 1800
+key_prefix = "3ds_transaction"
+
+[redis.connection]
+timeout_ms = 5000
+max_retries = 3
+retry_delay_ms = 1000
 
 [redis.pool]
 max_size = 50
 min_idle = 10
+connection_timeout_seconds = 10
+idle_timeout_seconds = 300

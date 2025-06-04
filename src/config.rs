@@ -44,10 +44,8 @@ impl Settings {
         let run_mode = env::var("RUN_MODE").unwrap_or_else(|_| "development".into());
 
         let s = Config::builder()
-            // Start with default configuration
-            .add_source(File::with_name("config/default"))
-            // Add environment-specific configuration
-            .add_source(File::with_name(&format!("config/{}", run_mode)).required(false))
+            // Load environment-specific configuration (required)
+            .add_source(File::with_name(&format!("config/{}", run_mode)))
             // Add environment variables (with prefix "APP")
             // E.g., `APP_REDIS__URL=redis://custom:6379` would override redis.url
             .add_source(Environment::with_prefix("APP").separator("__"))

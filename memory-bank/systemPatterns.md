@@ -40,7 +40,8 @@
 - TransactionData struct fully serializable for Redis storage
 - UUID-based keys with configurable TTL and prefix
 - Async operations throughout the stack
-- Hierarchical configuration: default → environment → env vars
+- Simplified configuration: environment-specific files (development.toml/production.toml) → env vars
+- Complete configurations per environment (no default + override pattern)
 - Data persisted across API calls: version → authenticate → results → final
 - Automatic cleanup via Redis TTL (configurable, 30 min default)
 - Application fails fast if Redis unavailable (no silent fallbacks)

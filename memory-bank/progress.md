@@ -12,8 +12,9 @@
 2. **State Management System**
    - ✅ Redis-only implementation (no in-memory fallback)
    - ✅ TOML configuration system with type safety and validation
-   - ✅ Environment-specific configuration files (default/development/production)
-   - ✅ Hierarchical configuration loading with environment variable overrides
+   - ✅ Simplified configuration structure with only development.toml and production.toml
+   - ✅ Complete configurations per environment (no default + override pattern)
+   - ✅ Environment variable overrides with APP_ prefix support
    - ✅ Configurable Redis connection settings, TTL, and key prefixes
    - ✅ UUID-based transaction tracking with automatic cleanup
    - ✅ Cross-request data persistence with automatic TTL

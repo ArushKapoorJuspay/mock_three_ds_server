@@ -47,7 +47,7 @@ Build a complete mock 3D Secure (3DS) authentication server in Rust that simulat
 
 ### Constraints
 - Mock server only (no real payment processing)
-- Default in-memory state storage (with Redis option for production)
+- Redis-only state storage (production-ready, no in-memory fallback)
 - Focus on educational value while supporting production patterns
 - Must be testable via Postman/curl
 

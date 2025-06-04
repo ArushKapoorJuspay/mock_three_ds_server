@@ -61,8 +61,8 @@
 - Async connection management
 - JSON serialization for Redis storage
 - Automatic TTL (Time To Live) support
-- Environment-based configuration
-- Graceful fallback to in-memory storage
+- TOML configuration with environment-specific files
+- Production-ready deployment (no in-memory fallback)
 
 ### Supporting Libraries
 
