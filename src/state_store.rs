@@ -1,9 +1,8 @@
 use async_trait::async_trait;
-use std::collections::HashMap;
-use std::sync::{Arc, Mutex};
 use uuid::Uuid;
 use serde::{Serialize, Deserialize};
 
+use crate::config::Settings;
 use crate::models::{AuthenticateRequest, ResultsRequest};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -35,58 +34,16 @@ pub trait StateStore: Send + Sync {
     async fn delete(&self, key: &Uuid) -> Result<(), StateError>;
 }
 
-// In-memory implementation (existing pattern)
-pub struct InMemoryStore {
-    data: Arc<Mutex<HashMap<Uuid, TransactionData>>>,
-}
-
-impl InMemoryStore {
-    pub fn new() -> Self {
-        Self {
-            data: Arc::new(Mutex::new(HashMap::new())),
-        }
-    }
-}
-
-#[async_trait]
-impl StateStore for InMemoryStore {
-    async fn insert(&self, key: Uuid, data: TransactionData) -> Result<(), StateError> {
-        let mut guard = self.data.lock().unwrap();
-        guard.insert(key, data);
-        Ok(())
-    }
-
-    async fn get(&self, key: &Uuid) -> Result<Option<TransactionData>, StateError> {
-        let guard = self.data.lock().unwrap();
-        Ok(guard.get(key).cloned())
-    }
-
-    async fn update(&self, key: &Uuid, data: TransactionData) -> Result<(), StateError> {
-        let mut guard = self.data.lock().unwrap();
-        if guard.contains_key(key) {
-            guard.insert(*key, data);
-            Ok(())
-        } else {
-            Err(StateError::NotFound)
-        }
-    }
-
-    async fn delete(&self, key: &Uuid) -> Result<(), StateError> {
-        let mut guard = self.data.lock().unwrap();
-        guard.remove(key);
-        Ok(())
-    }
-}
-
-// Redis implementation
+// Redis implementation (Redis-only state store)
 pub struct RedisStore {
     client: redis::Client,
     ttl_seconds: u64,
+    key_prefix: String,
 }
 
 impl RedisStore {
-    pub async fn new(redis_url: &str, ttl_seconds: u64) -> Result<Self, StateError> {
-        let client = redis::Client::open(redis_url)
+    pub async fn new(settings: &Settings) -> Result<Self, StateError> {
+        let client = redis::Client::open(settings.redis.url.as_str())
             .map_err(|e| StateError::Connection(format!("Failed to create Redis client: {}", e)))?;
         
         // Test the connection
@@ -96,14 +53,19 @@ impl RedisStore {
         // Simple ping test
         let _: String = redis::cmd("PING").query_async(&mut conn).await?;
 
+        println!("✅ Redis connection established: {}", settings.redis.url);
+        println!("📝 Transaction TTL: {} seconds", settings.redis.ttl_seconds);
+        println!("🔑 Key prefix: {}", settings.redis.key_prefix);
+
         Ok(Self {
             client,
-            ttl_seconds,
+            ttl_seconds: settings.redis.ttl_seconds,
+            key_prefix: settings.redis.key_prefix.clone(),
         })
     }
 
     fn make_key(&self, key: &Uuid) -> String {
-        format!("3ds_transaction:{}", key)
+        format!("{}:{}", self.key_prefix, key)
     }
 }
 
@@ -181,27 +143,7 @@ impl StateStore for RedisStore {
     }
 }
 
-// Factory function to create the appropriate store based on configuration
-pub async fn create_state_store() -> Result<Box<dyn StateStore>, StateError> {
-    let use_redis = std::env::var("USE_REDIS")
-        .unwrap_or_else(|_| "false".to_string())
-        .parse::<bool>()
-        .unwrap_or(false);
-
-    if use_redis {
-        let redis_url = std::env::var("REDIS_URL")
-            .unwrap_or_else(|_| "redis://127.0.0.1:6379".to_string());
-        
-        let ttl_seconds = std::env::var("TRANSACTION_TTL_SECONDS")
-            .unwrap_or_else(|_| "1800".to_string()) // 30 minutes default
-            .parse::<u64>()
-            .unwrap_or(1800);
-
-        println!("Initializing Redis state store at {}", redis_url);
-        let redis_store = RedisStore::new(&redis_url, ttl_seconds).await?;
-        Ok(Box::new(redis_store))
-    } else {
-        println!("Initializing in-memory state store");
-        Ok(Box::new(InMemoryStore::new()))
-    }
+// Factory function to create Redis store from settings
+pub async fn create_redis_store(settings: &Settings) -> Result<RedisStore, StateError> {
+    RedisStore::new(settings).await
 }

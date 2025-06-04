@@ -1,0 +1,7 @@
+# Development configuration overrides
+
+[server]
+log_level = "debug"
+
+[redis]
+ttl_seconds = 300  # 5 minutes for faster testing

@@ -1,1 +1,11 @@
 /target
+
+# Configuration
+config/local.toml
+config/secret.toml
+*.local.toml
+
+# Keep example files
+!config/default.toml
+!config/development.toml
+!config/production.toml

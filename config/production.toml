@@ -1,0 +1,13 @@
+# Production configuration overrides
+
+[server]
+host = "0.0.0.0"
+log_level = "warn"
+
+[redis]
+# Production Redis URL should be set via environment variable
+# Example: APP_REDIS__URL=redis://prod-redis:6379
+
+[redis.pool]
+max_size = 50
+min_idle = 10

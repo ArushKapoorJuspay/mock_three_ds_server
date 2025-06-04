@@ -184,6 +184,7 @@ env_logger = "0.10"                # Logging
 redis = { version = "0.25", features = ["aio", "tokio-comp"] }  # Redis client
 async-trait = "0.1"                # Async traits for state abstraction
 thiserror = "1.0"                  # Error handling derive macros
+config = { version = "0.13", features = ["toml"] }     # TOML configuration
 ```
 
 ### Dependency Security

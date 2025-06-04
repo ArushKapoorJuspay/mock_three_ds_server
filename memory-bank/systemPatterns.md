@@ -24,25 +24,26 @@
 ### Key Technical Decisions
 
 #### 1. State Management Pattern
-**Decision:** Trait-based abstraction with multiple backends
+**Decision:** Redis-only with TOML configuration
 **Rationale:** 
-- Educational value showing abstraction patterns
-- Production-ready with Redis support
-- Maintains simplicity for development scenarios
-- Demonstrates async programming patterns
+- Production-ready without development complexity
+- Eliminates accidental in-memory usage in production
+- Type-safe configuration management
+- Clear deployment requirements
 
-**Implementation Options:**
-- **InMemoryStore:** Arc<Mutex<HashMap>> for development
-- **RedisStore:** Async Redis client for production
-- Unified StateStore trait for consistent interface
+**Implementation:**
+- **RedisStore only:** Single, well-tested implementation
+- **TOML Configuration:** Structured, validated settings
+- **StateStore trait:** Clean abstraction for future backends
 
 **Implementation Context:**
-- TransactionData struct serializable for Redis storage
-- UUID-based keys with configurable TTL
+- TransactionData struct fully serializable for Redis storage
+- UUID-based keys with configurable TTL and prefix
 - Async operations throughout the stack
-- Environment-based configuration (USE_REDIS)
+- Hierarchical configuration: default → environment → env vars
 - Data persisted across API calls: version → authenticate → results → final
-- Automatic cleanup via Redis TTL (30 min default)
+- Automatic cleanup via Redis TTL (configurable, 30 min default)
+- Application fails fast if Redis unavailable (no silent fallbacks)
 
 #### 2. Data Modeling Strategy  
 **Decision:** Derive macros for automatic serialization
