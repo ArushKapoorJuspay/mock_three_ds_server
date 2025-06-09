@@ -9,3 +9,17 @@ config/secret.toml
 !config/default.toml
 !config/development.toml
 !config/production.toml
+
+# Certificates and private keys (security)
+certs/
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+*.der
+*.csr
+
+# Keep certificate examples and documentation
+!certs.example/
+!certs.example/**

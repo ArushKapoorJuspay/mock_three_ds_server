@@ -6,6 +6,7 @@ use std::time::Duration;
 
 use crate::config::Settings;
 use crate::models::{AuthenticateRequest, ResultsRequest};
+use crate::crypto::EphemeralKeyPair;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TransactionData {
@@ -14,6 +15,7 @@ pub struct TransactionData {
     pub ds_trans_id: Uuid,
     pub sdk_trans_id: Uuid,
     pub results_request: Option<ResultsRequest>,
+    pub ephemeral_keys: Option<EphemeralKeyPair>,
 }
 
 #[derive(Debug, thiserror::Error)]

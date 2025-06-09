@@ -39,3 +39,9 @@ governor = "0.6"
 
 # Health checks
 tokio-util = "0.7"
+
+# Cryptography for JWT and key generation
+jsonwebtoken = "9.2"
+p256 = { version = "0.13", features = ["ecdsa", "jwk"] }
+rand_core = { version = "0.6", features = ["std"] }
+pem = "3.0"

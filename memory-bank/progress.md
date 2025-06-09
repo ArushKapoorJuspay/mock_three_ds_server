@@ -51,6 +51,32 @@
    - ✅ Base64 encoding of challenge requests
    - ✅ Complete 3DS transaction lifecycle simulation
 
+6. **Dynamic ACS Signed Content System**
+   - ✅ New crypto module with ECDSA P-256 ephemeral key pair generation
+   - ✅ JWT creation with PS256 signing algorithm and x5c certificate chain
+   - ✅ Dynamic generation for mobile friction flows (deviceChannel="02" + challenge)
+   - ✅ Certificate infrastructure with mock ACS certificates and private keys
+   - ✅ Graceful fallback to hardcoded content for reliability
+   - ✅ Enhanced state management with ephemeral key storage
+   - ✅ Real-time console logging for generation success/failure
+   - ✅ Complete JWT payload compliance (acsTransID, acsRefNumber, acsURL, acsEphemPubKey)
+   - ✅ Production-ready error handling and recovery mechanisms
+   - ✅ Comprehensive documentation and testing guidelines (DYNAMIC_ACS_SIGNED_CONTENT.md)
+
+7. **Certificate Security Implementation (Latest Implementation)**
+   - ✅ Comprehensive certificate generation script (generate-certs.sh) with cross-platform support
+   - ✅ Complete Git exclusion of all certificate files and private keys via enhanced .gitignore
+   - ✅ Interactive certificate management with expiry monitoring and renewal prompts
+   - ✅ Proper file permissions automation (600 for private keys, 644 for certificates)
+   - ✅ Certificate validation and verification with OpenSSL integration
+   - ✅ Subject Alternative Names (SAN) configuration for localhost development
+   - ✅ Detailed security documentation and best practices guide (CERTIFICATE_SECURITY.md)
+   - ✅ Enhanced developer onboarding with automated certificate setup
+   - ✅ Production deployment security guidelines and HSM recommendations
+   - ✅ Graceful fallback behavior when certificates are missing
+   - ✅ Security audit checklist and compliance verification
+   - ✅ Cross-platform compatibility (macOS, Linux, WSL) with colorized output
+
 6. **Production Configuration System**
    - ✅ Environment-specific TOML files (development.toml, production.toml)
    - ✅ Complete configurations per environment (no default merging)

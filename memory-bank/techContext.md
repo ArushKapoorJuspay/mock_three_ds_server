@@ -67,6 +67,40 @@
 - Configurable pool sizes (100 production, 10 development)
 - Automatic retry logic with exponential backoff
 
+### Cryptography Libraries (Latest Implementation)
+
+#### JWT Operations: jsonwebtoken 9.2
+**Purpose:** JWT creation and verification for 3DS ACS signed content
+**Features:**
+- PS256 algorithm support for 3DS compliance
+- x5c certificate chain inclusion in JWT headers
+- Custom payload serialization with serde integration
+**Usage:** Dynamic ACS signed content for mobile friction flows
+
+#### Elliptic Curve Cryptography: p256 0.13
+**Purpose:** ECDSA P-256 ephemeral key pair generation for 3DS transactions
+**Features:**
+- Secure random key generation with ECDSA support
+- JWK format export for 3DS protocol compliance
+- Base64url encoding of key coordinates (x, y, d)
+**Security:** Industry-standard elliptic curve cryptography
+
+#### Secure Random Generation: rand_core 0.6
+**Purpose:** Cryptographically secure randomness for ephemeral keys
+**Features:**
+- OsRng for system entropy source
+- Thread-safe random number generation
+- Security-critical randomness for key material
+**Integration:** Used with p256 for secure key generation
+
+#### Certificate Parsing: pem 3.0
+**Purpose:** PEM certificate and private key loading for JWT signing
+**Features:**
+- PKCS#8 and PKCS#1 private key parsing
+- X.509 certificate processing for x5c headers
+- Error handling for malformed certificate files
+**Fallback:** Graceful degradation to hardcoded content on certificate errors
+
 ### Production Optimization Libraries
 
 #### Connection Pooling: deadpool-redis 0.14
@@ -168,6 +202,10 @@ cargo --version
 # macOS: brew install redis
 # Ubuntu: sudo apt-get install redis-server
 # Start Redis: redis-server
+
+# Install OpenSSL for certificate generation (development)
+# macOS: brew install openssl
+# Ubuntu: sudo apt-get install openssl
 ```
 
 ### Project Setup
@@ -176,8 +214,11 @@ cargo --version
 git clone <repository> # or cargo new mock_three_ds_server
 cd mock_three_ds_server
 
-# Install dependencies (includes production optimizations)
+# Install dependencies (includes production optimizations + cryptography)
 cargo build
+
+# Generate development certificates (REQUIRED - first time only)
+./generate-certs.sh
 
 # Run development server
 RUN_MODE=development cargo run
@@ -187,6 +228,31 @@ RUN_MODE=production cargo run
 
 # Run with comprehensive logging
 RUST_LOG=debug cargo run
+```
+
+### Certificate Security (Latest Implementation)
+```bash
+# Automated certificate generation with security best practices
+./generate-certs.sh
+
+# The script provides:
+# - Cross-platform compatibility (macOS, Linux, WSL)
+# - Interactive certificate renewal with expiry monitoring
+# - Proper file permissions (600 for private keys, 644 for certificates)
+# - Certificate validation and verification
+# - Subject Alternative Names (SAN) for localhost
+# - Security warnings and production guidance
+# - Colorized output for better developer experience
+
+# Certificate structure created:
+# certs/acs-cert.pem (excluded from Git)
+# certs/acs-private-key.pem (excluded from Git)
+
+# Security features:
+# - No private keys in version control
+# - Unique certificates per developer
+# - Automated expiry warnings (30 days)
+# - Production deployment security guidelines
 ```
 
 ### Development Workflow
@@ -205,6 +271,11 @@ cargo build --release
 
 # Load testing (requires k6)
 k6 run --vus 100 --duration 30s load-test.js
+
+# Test dynamic ACS signed content generation
+curl -X POST http://localhost:8080/3ds/authenticate \
+  -H "Content-Type: application/json" \
+  -d '{"deviceChannel":"02","threeDSRequestorChallengeInd":"04",...}'
 ```
 
 ### IDE Configuration
@@ -277,6 +348,12 @@ governor = "0.6"
 
 # Health checks
 tokio-util = "0.7"
+
+# Cryptography for JWT and key generation
+jsonwebtoken = "9.2"
+p256 = { version = "0.13", features = ["ecdsa", "jwk"] }
+rand_core = { version = "0.6", features = ["std"] }
+pem = "3.0"
 ```
 
 ### Dependency Security & Maintenance
@@ -288,9 +365,15 @@ tokio-util = "0.7"
 
 ### Build Dependencies
 - **Compilation:** Requires Rust 1.75+ for edition 2021 features
-- **Build Time:** ~7-8 minutes for clean build with all optimizations
-- **Binary Size:** ~15-20MB for release build with all features
+- **Build Time:** ~8-9 minutes for clean build with all optimizations + crypto
+- **Binary Size:** ~20-25MB for release build with all features + crypto libraries
 - **Cross Compilation:** Supported via Rust toolchain
+
+### Security Considerations for Cryptography
+- **Mock Certificates:** Development certificates included for testing only
+- **Key Management:** Production requires proper certificate infrastructure
+- **Random Generation:** Uses system entropy (OsRng) for cryptographic security
+- **Algorithm Choice:** PS256 and P-256 follow 3DS 2.2.0 specification requirements
 
 ## Tool Usage Patterns
 
@@ -325,6 +408,22 @@ redis-cli monitor
 redis-cli info
 ```
 
+#### Cryptography Testing Tools
+```bash
+# Test dynamic ACS signed content generation
+curl -X POST http://localhost:8080/3ds/authenticate \
+  -H "Content-Type: application/json" \
+  -d '{"deviceChannel":"02","threeDSRequestorChallengeInd":"04",...}'
+
+# Verify JWT structure (development)
+echo "<jwt_token>" | cut -d. -f1 | base64 -d | jq .  # Header
+echo "<jwt_token>" | cut -d. -f2 | base64 -d | jq .  # Payload
+
+# Certificate validation
+openssl x509 -in certs/acs-cert.pem -text -noout
+openssl rsa -in certs/acs-private-key.pem -check
+```
+
 #### Debugging Tools
 ```bash
 # Debug build with symbols
@@ -341,6 +440,9 @@ RUST_BACKTRACE=1 cargo run
 redis-cli
 > KEYS *
 > GET key_name
+
+# Crypto debugging
+RUST_LOG=debug cargo run  # Shows crypto operations
 ```
 
 ### Production Tools
@@ -357,6 +459,18 @@ redis-cli
 - **Health Checks:** Load balancer integration
 - **Configuration:** Environment-based deployment
 
+#### Certificate Management (Production)
+```bash
+# Certificate rotation (production)
+kubectl create secret tls acs-certs --cert=acs-cert.pem --key=acs-private-key.pem
+
+# Certificate monitoring
+openssl x509 -in acs-cert.pem -checkend 86400  # Check expiry
+
+# HSM integration (enterprise)
+# Configure hardware security modules for key storage
+```
+
 ## Environment Configuration
 
 ### Development Environment
@@ -371,6 +485,10 @@ CARGO_INCREMENTAL=1              # Faster rebuilds
 
 # Redis connection (defaults to localhost:6379)
 APP_REDIS__URL=redis://localhost:6379
+
+# Certificate paths (development)
+CERT_PATH=certs/acs-cert.pem
+KEY_PATH=certs/acs-private-key.pem
 ```
 
 ### Production Environment
@@ -391,6 +509,10 @@ APP_PERFORMANCE__ENABLE_METRICS=true
 # Server configuration
 APP_SERVER__WORKERS=0            # Use all CPU cores
 APP_SERVER__HOST=0.0.0.0
+
+# Security (production certificates)
+CERT_PATH=/etc/ssl/certs/acs-cert.pem
+KEY_PATH=/etc/ssl/private/acs-private-key.pem
 ```
 
 ### Load Testing Environment
@@ -400,6 +522,9 @@ RUST_LOG=info                    # Balanced logging
 TEST_DURATION=30s                # Test duration
 TEST_VUS=100                     # Virtual users
 TEST_TARGET=http://localhost:8080 # Target server
+
+# Test dynamic ACS flows specifically
+TEST_MOBILE_FRICTION=true        # Enable mobile friction flow testing
 ```
 
 ## Technology Decision Rationale
@@ -416,6 +541,57 @@ TEST_TARGET=http://localhost:8080 # Target server
 - Ownership system made concurrent programming intuitive and safe
 - Type system caught configuration and JSON mapping errors at build time
 - Zero-cost abstractions provided both safety and enterprise-grade performance
+
+### Why jsonwebtoken + p256 for Cryptography?
+**Alternatives Considered:**
+- **ring:** Lower-level, more complex API
+- **openssl bindings:** C dependency complexity
+- **rustls:** TLS-focused, not JWT-specific
+
+**jsonwebtoken + p256 Chosen For:**
+- Native Rust implementation (no C dependencies)
+- Excellent PS256 and ECDSA P-256 support
+- Clean, ergonomic APIs for JWT operations
+- Strong type safety and compile-time validation
+- Active maintenance and security updates
+
+**Implementation Experience:**
+- Seamless integration with existing Rust ecosystem
+- Clear error messages and debugging support
+- Graceful fallback handling for certificate issues
+- Performance adequate for high-throughput scenarios
+
+### Why PS256 Algorithm for JWT Signing?
+**Alternatives Considered:**
+- **RS256:** RSA-based, larger signatures
+- **ES256:** ECDSA with SHA-256, good alternative
+- **HS256:** HMAC-based, symmetric key issues
+
+**PS256 Chosen For:**
+- EMVCo 3DS 2.2.0 specification compliance
+- RSA-PSS provides excellent security properties
+- Industry standard for 3DS implementations
+- Good balance of security and performance
+- Wide support across 3DS SDK implementations
+
+### Why P-256 for Ephemeral Keys?
+**Alternatives Considered:**
+- **P-384:** Higher security, larger keys
+- **P-521:** Maximum security, performance cost
+- **Ed25519:** Fast, but not 3DS standard
+
+**P-256 Chosen For:**
+- Required by EMVCo 3DS 2.2.0 specification
+- NIST-approved elliptic curve
+- Excellent performance characteristics
+- Wide SDK and library support
+- Industry standard for payment processing
+
+**Implementation Experience:**
+- Fast key generation (microseconds)
+- Compact key representation for JWK format
+- Seamless base64url encoding support
+- Strong security properties for ephemeral usage
 
 ### Why deadpool-redis for Connection Pooling?
 **Alternatives Considered:**
@@ -517,6 +693,10 @@ rustup update
 
 # Check for CVEs in dependencies
 cargo audit --db ~/.cargo/advisory-db
+
+# Certificate rotation (production)
+# Update certificates before expiry
+openssl x509 -in certs/acs-cert.pem -checkend 2592000  # 30 days
 ```
 
 ### Production Deployment Updates
@@ -532,23 +712,38 @@ curl -f http://localhost:8080/health || exit 1
 
 # Rolling deployment with health checks
 # (specific to your orchestration platform)
+
+# Verify cryptographic functionality
+curl -X POST http://localhost:8080/3ds/authenticate \
+  -H "Content-Type: application/json" \
+  -d '{"deviceChannel":"02","threeDSRequestorChallengeInd":"04",...}' \
+  | jq '.authenticationResponse.acsSignedContent'
 ```
 
 ## Future Technology Considerations
+
+### Advanced Cryptography
+- **Hardware Security Modules (HSM):** Secure key storage for production
+- **Certificate Authority Integration:** Automated certificate provisioning
+- **Key Rotation:** Automated ephemeral key lifecycle management
+- **Advanced Algorithms:** Post-quantum cryptography preparation
 
 ### Advanced Monitoring
 - **OpenTelemetry:** Distributed tracing integration
 - **Jaeger:** Request tracing across services
 - **Custom Dashboards:** Business-specific metrics
+- **Cryptographic Metrics:** Key generation performance, signature verification times
 
 ### Enhanced Security
 - **TLS termination:** HTTPS support examples
 - **Authentication:** API key validation middleware
 - **Rate limiting:** Distributed rate limiting with Redis
+- **Certificate Pinning:** Enhanced certificate validation
 
 ### Scalability Enhancements
 - **Redis Cluster:** High availability and horizontal scaling
 - **Load balancing:** Multi-instance deployment patterns
 - **Service mesh:** Advanced traffic management
+- **Distributed Key Management:** Multi-region key synchronization
 
-**Current Status:** Production-ready with enterprise-grade performance characteristics and comprehensive monitoring capabilities.
+**Current Status:** Production-ready with enterprise-grade performance characteristics, comprehensive monitoring capabilities, and dynamic cryptographic content generation for 3DS mobile flows.

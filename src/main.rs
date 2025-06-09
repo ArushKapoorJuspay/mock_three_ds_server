@@ -1,6 +1,7 @@
 #![recursion_limit = "256"]
 
 mod config;
+mod crypto;
 mod handlers;
 mod models;
 mod state_store;
