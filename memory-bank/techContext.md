@@ -275,7 +275,7 @@ k6 run --vus 100 --duration 30s load-test.js
 # Test dynamic ACS signed content generation
 curl -X POST http://localhost:8080/3ds/authenticate \
   -H "Content-Type: application/json" \
-  -d '{"deviceChannel":"02","threeDSRequestorChallengeInd":"04",...}'
+  -d '{"deviceChannel":"01","threeDSRequestorChallengeInd":"04",...}'
 ```
 
 ### IDE Configuration
@@ -413,7 +413,7 @@ redis-cli info
 # Test dynamic ACS signed content generation
 curl -X POST http://localhost:8080/3ds/authenticate \
   -H "Content-Type: application/json" \
-  -d '{"deviceChannel":"02","threeDSRequestorChallengeInd":"04",...}'
+  -d '{"deviceChannel":"01","threeDSRequestorChallengeInd":"04",...}'
 
 # Verify JWT structure (development)
 echo "<jwt_token>" | cut -d. -f1 | base64 -d | jq .  # Header
@@ -716,7 +716,7 @@ curl -f http://localhost:8080/health || exit 1
 # Verify cryptographic functionality
 curl -X POST http://localhost:8080/3ds/authenticate \
   -H "Content-Type: application/json" \
-  -d '{"deviceChannel":"02","threeDSRequestorChallengeInd":"04",...}' \
+  -d '{"deviceChannel":"01","threeDSRequestorChallengeInd":"04",...}' \
   | jq '.authenticationResponse.acsSignedContent'
 ```
 

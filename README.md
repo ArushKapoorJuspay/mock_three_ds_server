@@ -119,7 +119,7 @@ The server will start on `http://localhost:8080`
 ```json
 {
     "threeDSServerTransID": "{{threeDSServerTransID}}",
-    "deviceChannel": "02",
+    "deviceChannel": "01",
     "messageCategory": "01",
     "preferredProtocolVersion": "2.2.0",
     "enforcePreferredProtocolVersion": true,

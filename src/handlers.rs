@@ -52,7 +52,7 @@ pub async fn authenticate_handler(
     // Enhanced flow decision logic
     let card_number = &req.cardholder_account.acct_number;
     let challenge_indicator = &req.three_ds_requestor.three_ds_requestor_challenge_ind;
-    let is_mobile = req.device_channel == "02"; // Fixed: mobile should be "02" based on requirement
+    let is_mobile = req.device_channel == "01"; // Mobile should be "01" based on requirement
     
     // Determine if challenge is required based on challenge indicator and card number
     let should_challenge = match challenge_indicator.as_str() {

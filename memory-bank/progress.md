@@ -54,7 +54,7 @@
 6. **Dynamic ACS Signed Content System**
    - ✅ New crypto module with ECDSA P-256 ephemeral key pair generation
    - ✅ JWT creation with PS256 signing algorithm and x5c certificate chain
-   - ✅ Dynamic generation for mobile friction flows (deviceChannel="02" + challenge)
+   - ✅ Dynamic generation for mobile friction flows (deviceChannel="01" + challenge)
    - ✅ Certificate infrastructure with mock ACS certificates and private keys
    - ✅ Graceful fallback to hardcoded content for reliability
    - ✅ Enhanced state management with ephemeral key storage

@@ -27,7 +27,7 @@ This implementation adds dynamic generation of `acs_signed_content` for mobile f
 ### Flow Logic
 
 The dynamic ACS signed content generation is triggered when:
-- `deviceChannel == "02"` (mobile flow)
+- `deviceChannel == "01"` (mobile flow)
 - `should_challenge == true` (friction flow requiring challenge)
 
 ### Implementation Process
@@ -58,7 +58,7 @@ To test the dynamic generation:
 1. **Mobile Friction Flow Request**:
    ```json
    {
-     "deviceChannel": "02",
+     "deviceChannel": "01",
      "threeDSRequestorChallengeInd": "04", // Force challenge
      "cardholderAccount": {
        "acctNumber": "4000400040004000" // Any card
