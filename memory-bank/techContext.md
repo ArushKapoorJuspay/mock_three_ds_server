@@ -276,6 +276,11 @@ k6 run --vus 100 --duration 30s load-test.js
 curl -X POST http://localhost:8080/3ds/authenticate \
   -H "Content-Type: application/json" \
   -d '{"deviceChannel":"01","threeDSRequestorChallengeInd":"04",...}'
+
+# Test new ACS challenge endpoint (latest addition)
+curl -X POST http://localhost:8080/processor/mock/acs/trigger-otp \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d 'creq={"messageType":"CReq","threeDsServerTransId":"uuid","acsTransId":"uuid","challengeWindowSize":"01","messageVersion":"2.2.0"}'
 ```
 
 ### IDE Configuration

@@ -38,8 +38,39 @@ The server now respects `threeDSRequestorChallengeInd` values that override defa
 - `sdkTransID`: Generated UUID for SDK communication
 
 ### Browser-Specific Fields (deviceChannel: "02")
-- `acsURL`: Challenge URL for browser redirects (when challenge required)
+- `acsURL`: Dynamic challenge URL pointing to local ACS endpoint (when challenge required)
 - `base64EncodedChallengeRequest`: Base64 encoded challenge data
+
+## ACS Challenge Endpoint (Latest Implementation)
+
+### 4. Web Challenge Flow with Local ACS
+The server now includes a complete ACS challenge endpoint for browser-based authentication:
+
+**Endpoint**: `POST /processor/mock/acs/trigger-otp`
+**Purpose**: Provides complete HTML challenge form for Web Challenge flow
+**Features**:
+- Self-contained challenge form with modern UI
+- Dynamic URL generation using server configuration
+- Template-based HTML rendering
+- Proper form data handling for `creq` parameter
+
+### ACS Challenge Form Features
+- **Interactive OTP Input**: 4-digit code entry with validation
+- **Modern UI**: Responsive design with Juspay Demo Bank branding
+- **Help Sections**: Collapsible help with testing instructions
+- **JavaScript Integration**: Form validation and submission handling
+- **Error Handling**: Graceful failure with fallback redirects
+
+### Template System
+The challenge form uses a template system with placeholder substitution:
+- `{{FALLBACK_REDIRECT_URL}}`: Dynamic server URL for redirects
+- `{{THREE_DS_SERVER_TRANS_ID}}`: Extracted from creq JSON
+- `{{PAY_ENDPOINT}}`: Dynamic verify-otp endpoint URL
+
+### Form Data Handling
+The endpoint accepts Form POST data with:
+- **creq**: JSON string (not base64-encoded) containing challenge request
+- **Expected Format**: `{"messageType":"CReq","threeDsServerTransId":"uuid","acsTransId":"uuid","challengeWindowSize":"01","messageVersion":"2.2.0"}`
 
 ## Testing Examples
 

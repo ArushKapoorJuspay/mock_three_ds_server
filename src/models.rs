@@ -235,7 +235,7 @@ pub struct BroadInfoDescription {
     pub message: String,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ChallengeRequest {
     pub message_type: String,
@@ -282,6 +282,12 @@ pub struct ResultsResponse {
     pub sdk_trans_id: Uuid,
     pub results_status: String,
     pub message_version: String,
+}
+
+// ACS Challenge Form Models
+#[derive(Debug, Deserialize)]
+pub struct AcsTriggerOtpRequest {
+    pub creq: String,
 }
 
 // Final API Models

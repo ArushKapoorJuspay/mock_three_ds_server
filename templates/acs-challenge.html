@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Challenge Form - Juspay Demo Bank</title>
+    <style>
+      body {
+        font-family: "Segoe UI", Arial, sans-serif;
+        max-width: 450px;
+        margin: 40px auto;
+        padding: 30px;
+        background-color: #f5f7fa;
+        color: #2d3748;
+      }
+
+      .card {
+        background: white;
+        border-radius: 12px;
+        padding: 30px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+      }
+
+      .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 35px;
+      }
+
+      .logo {
+        color: #356fd3;
+        font-size: 28px;
+        font-weight: bold;
+        letter-spacing: -0.5px;
+      }
+
+      .bank-name {
+        color: #4a5568;
+        font-size: 15px;
+        margin-top: 5px;
+        font-weight: 500;
+      }
+
+      .card-network {
+        color: #4a5568;
+        font-size: 13px;
+        font-weight: 600;
+        text-align: right;
+        letter-spacing: 1px;
+      }
+
+      h1 {
+        font-size: 22px;
+        margin-bottom: 35px;
+        color: #1a202c;
+        font-weight: 600;
+      }
+
+      .merchant-info {
+        background: #f8fafc;
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 30px;
+      }
+
+      .merchant-name {
+        color: #4a5568;
+        font-size: 15px;
+        font-weight: 500;
+      }
+
+      .amount {
+        font-size: 28px;
+        font-weight: 600;
+        margin: 12px 0;
+        color: #1a202c;
+      }
+
+      .datetime,
+      .card-number {
+        color: #718096;
+        font-size: 14px;
+        margin: 8px 0;
+      }
+
+      .otp-section {
+        margin: 35px 0 10px 0;
+      }
+
+      .otp-section p {
+        color: #4a5568;
+        font-size: 15px;
+        margin-bottom: 20px;
+      }
+
+      label {
+        font-size: 14px;
+        color: #4a5568;
+        font-weight: 500;
+      }
+
+      input[type="text"] {
+        width: 100%;
+        padding: 12px;
+        margin: 8px 0;
+        border: 1px solid #e2e8f0;
+        border-radius: 6px;
+        font-size: 16px;
+        background-color: white;
+        outline: none;
+        box-sizing: border-box;
+        transition: all 0.2s ease;
+      }
+
+      input[type="text"]:focus {
+        border-color: #356fd3;
+        box-shadow: 0 0 0 3px rgba(53, 111, 211, 0.1);
+      }
+
+      .checkbox-container {
+        margin: 15px 0;
+        display: flex;
+        align-items: center;
+      }
+
+      input[type="checkbox"] {
+        width: 20px;
+        height: 20px;
+        margin-right: 12px;
+        cursor: pointer;
+        border: 2px solid #e2e8f0;
+        border-radius: 4px;
+        accent-color: #356fd3;
+      }
+
+      input[type="checkbox"]:checked {
+        border-color: #356fd3;
+      }
+
+      .checkbox-container label {
+        font-size: 14px;
+        color: #4a5568;
+      }
+
+      .button-container {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        margin-top: 25px;
+      }
+
+      .btn {
+        width: 100%;
+        padding: 14px;
+        border: none;
+        border-radius: 8px;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+
+      .btn-cancel {
+        background-color: #f7fafc;
+        border: 1px solid #e2e8f0;
+        color: #4a5568;
+      }
+
+      .btn-cancel:hover {
+        background-color: #edf2f7;
+      }
+
+      .btn-pay {
+        background-color: #356fd3;
+        color: white;
+      }
+
+      .btn-pay:not(:disabled):hover {
+        background-color: #2b5bae;
+      }
+
+      .btn-pay:disabled {
+        background-color: #bcd8fa;
+        cursor: not-allowed;
+      }
+
+      @media (max-width: 480px) {
+        body {
+          margin: 0;
+          padding: 0px;
+        }
+
+        .card {
+          padding: 20px;
+          border-radius: 8px;
+        }
+      }
+
+      .help-section {
+        margin: 20px 0;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+      }
+
+      .help-header {
+        padding: 15px;
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+        user-select: none;
+      }
+
+      .help-header:hover {
+        background-color: #f8fafc;
+      }
+
+      .help-content {
+        padding: 15px;
+        border-top: 1px solid #e2e8f0;
+        color: #4a5568;
+        font-size: 14px;
+        line-height: 1.6;
+        display: none;
+      }
+
+      .help-header::before {
+        content: "▼";
+        margin-right: 10px;
+        font-size: 12px;
+        transition: transform 0.3s ease;
+      }
+
+      .help-section.active .help-header::before {
+        transform: rotate(-180deg);
+      }
+
+      .help-section.active .help-content {
+        display: block;
+      }
+
+      .help-content ul {
+        margin: 0;
+        padding-left: 20px;
+        list-style-type: disc;
+      }
+
+      .help-content ul li {
+        margin-bottom: 8px;
+      }
+
+      .help-content ul li:last-child {
+        margin-bottom: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <div class="header">
+        <div>
+          <div class="logo">jdb</div>
+          <div class="bank-name">Juspay Demo Bank</div>
+        </div>
+        <img
+          src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='105' height='36' viewBox='0 0 105 36' fill='none'%3E%3Cpath d='M49.232 8.32227C48.901 8.32227 48.6071 8.39062 48.3504 8.52734C48.0975 8.66016 47.8836 8.85352 47.7088 9.10742C47.5377 9.36133 47.4075 9.66797 47.3182 10.0273C47.229 10.3867 47.1843 10.791 47.1843 11.2402C47.1843 11.8457 47.255 12.3633 47.3964 12.793C47.5414 13.2188 47.7646 13.5449 48.0659 13.7715C48.3672 13.9941 48.7559 14.1055 49.232 14.1055C49.563 14.1055 49.8941 14.0664 50.2251 13.9883C50.5599 13.9102 50.9226 13.7988 51.3131 13.6543V15.1777C50.9523 15.334 50.5971 15.4453 50.2475 15.5117C49.8978 15.582 49.5054 15.6172 49.0702 15.6172C48.2296 15.6172 47.5377 15.4355 46.9946 15.0723C46.4553 14.7051 46.0554 14.1934 45.795 13.5371C45.5347 12.877 45.4045 12.1074 45.4045 11.2285C45.4045 10.5801 45.4882 9.98633 45.6556 9.44727C45.8229 8.9082 46.0684 8.44141 46.392 8.04688C46.7157 7.65234 47.1155 7.34766 47.5916 7.13281C48.0677 6.91797 48.6145 6.81055 49.232 6.81055C49.6374 6.81055 50.0429 6.86523 50.4483 6.97461C50.8575 7.08008 51.248 7.22656 51.62 7.41406L51.0621 8.89062C50.7571 8.73828 50.4502 8.60547 50.1415 8.49219C49.8327 8.37891 49.5296 8.32227 49.232 8.32227Z' fill='%23777777'/%3E%3Cpath d='M58.0476 15.5L57.4561 13.4609H54.4823L53.8909 15.5H52.0273L54.9063 6.89844H57.0209L59.9111 15.5H58.0476ZM57.0433 11.9375L56.4518 9.94531C56.4146 9.8125 56.3644 9.64258 56.3012 9.43555C56.2417 9.22461 56.1803 9.01172 56.1171 8.79688C56.0576 8.57812 56.0092 8.38867 55.972 8.22852C55.9348 8.38867 55.8827 8.58789 55.8158 8.82617C55.7525 9.06055 55.6912 9.2832 55.6317 9.49414C55.5721 9.70508 55.5294 9.85547 55.5033 9.94531L54.9175 11.9375H57.0433Z' fill='%23777777'/%3E%3Cpath d='M63.3202 6.93359C64.0604 6.93359 64.6704 7.02734 65.1502 7.21484C65.6338 7.40234 65.9927 7.68555 66.2271 8.06445C66.4614 8.44336 66.5786 8.92188 66.5786 9.5C66.5786 9.89062 66.5079 10.2324 66.3666 10.5254C66.2252 10.8184 66.0392 11.0664 65.8086 11.2695C65.578 11.4727 65.3288 11.6387 65.061 11.7676L67.4601 15.5H65.5408L63.5936 12.2129H62.673V15.5H60.9433V6.93359H63.3202ZM63.1974 8.42188H62.673V10.7363H63.2309C63.8037 10.7363 64.2129 10.6367 64.4584 10.4375C64.7076 10.2344 64.8322 9.9375 64.8322 9.54688C64.8322 9.14062 64.6983 8.85156 64.4305 8.67969C64.1664 8.50781 63.7554 8.42188 63.1974 8.42188Z' fill='%23777777'/%3E%3Cpath d='M75.2547 11.1348C75.2547 12.0996 75.078 12.9062 74.7246 13.5547C74.375 14.1992 73.8672 14.6855 73.2014 15.0137C72.5356 15.3379 71.734 15.5 70.7967 15.5H68.4868V6.93359H71.0477C71.9033 6.93359 72.6453 7.09375 73.274 7.41406C73.9026 7.73047 74.3898 8.20117 74.7358 8.82617C75.0817 9.44727 75.2547 10.2168 75.2547 11.1348ZM73.4581 11.1816C73.4581 10.5488 73.3688 10.0293 73.1903 9.62305C73.0154 9.21289 72.7551 8.91016 72.4091 8.71484C72.0669 8.51953 71.6429 8.42188 71.137 8.42188H70.2164V14H70.9585C71.8028 14 72.4296 13.7637 72.8388 13.291C73.2516 12.8184 73.4581 12.1152 73.4581 11.1816Z' fill='%23777777'/%3E%3Cpath d='M53.0037 31.5H50.8054L47.2569 25.0195H47.2067C47.2215 25.2891 47.2345 25.5605 47.2457 25.834C47.2569 26.1074 47.268 26.3809 47.2792 26.6543C47.2903 26.9238 47.3015 27.1953 47.3127 27.4688V31.5H45.7671V22.9336H47.9487L51.4917 29.3496H51.5307C51.5233 29.084 51.514 28.8203 51.5028 28.5586C51.4917 28.2969 51.4805 28.0352 51.4694 27.7734C51.4619 27.5117 51.4545 27.25 51.4471 26.9883V22.9336H53.0037V31.5Z' fill='%23777777'/%3E%3Cpath d='M59.7605 31.5H55.0625V22.9336H59.7605V24.4219H56.7922V26.3027H59.554V27.791H56.7922V30H59.7605V31.5Z' fill='%23777777'/%3E%3Cpath d='M64.6146 31.5H62.885V24.4453H60.6699V22.9336H66.8297V24.4453H64.6146V31.5Z' fill='%23777777'/%3E%3Cpath d='M78.1058 22.9336L76.0302 31.5H74.0607L72.9559 27C72.9336 26.9141 72.9038 26.7832 72.8667 26.6074C72.8295 26.4316 72.7904 26.2402 72.7495 26.0332C72.7086 25.8223 72.6714 25.625 72.6379 25.4414C72.6081 25.2539 72.5877 25.1055 72.5765 24.9961C72.5654 25.1055 72.543 25.252 72.5096 25.4355C72.4798 25.6191 72.4445 25.8145 72.4036 26.0215C72.3664 26.2285 72.3292 26.4219 72.292 26.6016C72.2548 26.7812 72.225 26.918 72.2027 27.0117L71.1035 31.5H69.1396L67.0584 22.9336H68.7602L69.8035 27.6094C69.8333 27.75 69.8668 27.918 69.9039 28.1133C69.9449 28.3086 69.9839 28.5137 70.0211 28.7285C70.062 28.9395 70.0974 29.1445 70.1271 29.3438C70.1606 29.5391 70.1848 29.709 70.1997 29.8535C70.2183 29.7051 70.2424 29.5332 70.2722 29.3379C70.302 29.1387 70.3336 28.9375 70.367 28.7344C70.4042 28.5273 70.4414 28.3359 70.4786 28.1602C70.5158 27.9844 70.5493 27.8418 70.5791 27.7324L71.7675 22.9336H73.4023L74.5907 27.7324C74.6167 27.8379 74.6465 27.9805 74.68 28.1602C74.7172 28.3359 74.7544 28.5273 74.7916 28.7344C74.8288 28.9414 74.8622 29.1445 74.892 29.3438C74.9255 29.5391 74.9497 29.709 74.9645 29.8535C74.9906 29.6582 75.0259 29.4219 75.0705 29.1445C75.1189 28.8633 75.1691 28.584 75.2212 28.3066C75.277 28.0293 75.3253 27.7969 75.3663 27.6094L76.404 22.9336H78.1058Z' fill='%23777777'/%3E%3Cpath d='M86.5364 27.2051C86.5364 27.8652 86.4582 28.4668 86.302 29.0098C86.1458 29.5488 85.9077 30.0137 85.5879 30.4043C85.2717 30.7949 84.87 31.0957 84.3827 31.3066C83.8954 31.5137 83.3189 31.6172 82.653 31.6172C81.9872 31.6172 81.4107 31.5137 80.9234 31.3066C80.4361 31.0957 80.0326 30.7949 79.7127 30.4043C79.3965 30.0137 79.1603 29.5469 79.0041 29.0039C78.8478 28.4609 78.7697 27.8574 78.7697 27.1934C78.7697 26.3066 78.9074 25.5352 79.1826 24.8789C79.4616 24.2188 79.8893 23.707 80.4659 23.3438C81.0424 22.9805 81.7752 22.7988 82.6642 22.7988C83.5495 22.7988 84.2767 22.9805 84.8458 23.3438C85.4186 23.707 85.8426 24.2188 86.1179 24.8789C86.3969 25.5391 86.5364 26.3145 86.5364 27.2051ZM80.5831 27.2051C80.5831 27.8027 80.6537 28.3184 80.7951 28.752C80.9402 29.1816 81.1652 29.5137 81.4702 29.748C81.7752 29.9785 82.1695 30.0938 82.653 30.0938C83.144 30.0938 83.542 29.9785 83.8471 29.748C84.1521 29.5137 84.3734 29.1816 84.511 28.752C84.6524 28.3184 84.723 27.8027 84.723 27.2051C84.723 26.3066 84.5631 25.5996 84.2432 25.084C83.9233 24.5684 83.397 24.3105 82.6642 24.3105C82.1769 24.3105 81.7789 24.4277 81.4702 24.6621C81.1652 24.8926 80.9402 25.2246 80.7951 25.6582C80.6537 26.0879 80.5831 26.6035 80.5831 27.2051Z' fill='%23777777'/%3E%3Cpath d='M90.6038 22.9336C91.344 22.9336 91.954 23.0273 92.4339 23.2148C92.9174 23.4023 93.2764 23.6855 93.5107 24.0645C93.745 24.4434 93.8622 24.9219 93.8622 25.5C93.8622 25.8906 93.7915 26.2324 93.6502 26.5254C93.5088 26.8184 93.3229 27.0664 93.0922 27.2695C92.8616 27.4727 92.6124 27.6387 92.3446 27.7676L94.7438 31.5H92.8244L90.8772 28.2129H89.9566V31.5H88.2269V22.9336H90.6038ZM90.481 24.4219H89.9566V26.7363H90.5145C91.0874 26.7363 91.4965 26.6367 91.742 26.4375C91.9912 26.2344 92.1158 25.9375 92.1158 25.5469C92.1158 25.1406 91.9819 24.8516 91.7141 24.6797C91.45 24.5078 91.039 24.4219 90.481 24.4219Z' fill='%23777777'/%3E%3Cpath d='M102.332 31.5H100.368L98.2309 27.8906L97.5 28.4414V31.5H95.7704V22.9336H97.5V26.8535C97.6153 26.6855 97.7288 26.5176 97.8404 26.3496C97.952 26.1816 98.0654 26.0137 98.1807 25.8457L100.39 22.9336H102.31L99.464 26.7246L102.332 31.5Z' fill='%23777777'/%3E%3Cpath d='M9.21973 5C9.21973 7.48528 7.30125 9.5 4.93469 9.5C2.56813 9.5 0.649658 7.48528 0.649658 5C0.649658 2.51472 2.56813 0.5 4.93469 0.5C7.30125 0.5 9.21973 2.51472 9.21973 5Z' fill='%23777777'/%3E%3Cpath d='M21.5987 5C21.5987 7.48528 19.6802 9.5 17.3137 9.5C14.9471 9.5 13.0287 7.48528 13.0287 5C13.0287 2.51472 14.9471 0.5 17.3137 0.5C19.6802 0.5 21.5987 2.51472 21.5987 5Z' fill='%23777777'/%3E%3Cpath d='M33.9777 5C33.9777 7.48528 32.0592 9.5 29.6927 9.5C27.3261 9.5 25.4076 7.48528 25.4076 5C25.4076 2.51472 27.3261 0.5 29.6927 0.5C32.0592 0.5 33.9777 2.51472 33.9777 5Z' fill='%23777777'/%3E%3Cpath d='M9.21973 18C9.21973 20.4853 7.30125 22.5 4.93469 22.5C2.56813 22.5 0.649658 20.4853 0.649658 18C0.649658 15.5147 2.56813 13.5 4.93469 13.5C7.30125 13.5 9.21973 15.5147 9.21973 18Z' fill='%23777777'/%3E%3Cpath d='M21.5987 18C21.5987 20.4853 19.6802 22.5 17.3137 22.5C14.9471 22.5 13.0287 20.4853 13.0287 18C13.0287 15.5147 14.9471 13.5 17.3137 13.5C19.6802 13.5 21.5987 15.5147 21.5987 18Z' fill='%23777777'/%3E%3Cpath d='M33.9777 18C33.9777 20.4853 32.0592 22.5 29.6927 22.5C27.3261 22.5 25.4076 20.4853 25.4076 18C25.4076 15.5147 27.3261 13.5 29.6927 13.5C32.0592 13.5 33.9777 15.5147 33.9777 18Z' fill='%23777777'/%3E%3Cpath d='M9.21973 31C9.21973 33.4853 7.30125 35.5 4.93469 35.5C2.56813 35.5 0.649658 33.4853 0.649658 31C0.649658 28.5147 2.56813 26.5 4.93469 26.5C7.30125 26.5 9.21973 28.5147 9.21973 31Z' fill='%23777777'/%3E%3Cpath d='M21.5987 31C21.5987 33.4853 19.6802 35.5 17.3137 35.5C14.9471 35.5 13.0287 33.4853 13.0287 31C13.0287 28.5147 14.9471 26.5 17.3137 26.5C19.6802 26.5 21.5987 28.5147 21.5987 31Z' fill='%23777777'/%3E%3Cpath d='M33.9777 31C33.9777 33.4853 32.0592 35.5 29.6927 35.5C27.3261 35.5 25.4076 33.4853 25.4076 31C25.4076 28.5147 27.3261 26.5 29.6927 26.5C32.0592 26.5 33.9777 28.5147 33.9777 31Z' fill='%23777777'/%3E%3C/svg%3E"
+        />
+      </div>
+
+      <h1>Challenge Form</h1>
+
+      <div class="merchant-info">
+        <div class="merchant-name">Dummy Merchant</div>
+        <div class="amount">USD 65.00</div>
+        <div class="datetime" id="currentDateTime"></div>
+      </div>
+
+      <div class="otp-section">
+        <p>Please enter your password.</p>
+        <div>
+          <input
+            type="text"
+            id="otp"
+            name="otp"
+            maxlength="4"
+            pattern="\d*"
+            inputmode="numeric"
+            onkeypress="return event.charCode >= 48 && event.charCode <= 57"
+            placeholder="Enter code 1234 to proceed"
+          />
+        </div>
+      </div>
+
+      <div class="button-container">
+        <button class="btn btn-cancel">Cancel</button>
+        <button class="btn btn-pay" id="payButton" disabled>Pay</button>
+      </div>
+
+      <div class="help-section">
+        <div class="help-header">What is this screen?</div>
+        <div class="help-content">
+          This is a simulated 3-D Secure (3DS) authentication screen used for
+          testing purposes. It mimics the secure verification process that
+          typically occurs during real online payments. In a live environment,
+          this screen would verify your identity using a one-time code.
+        </div>
+      </div>
+
+      <div class="help-section">
+        <div class="help-header">Need some help?</div>
+        <div class="help-content">
+          <ul>
+            <li>
+              Enter <strong>1234</strong> to simulate a successful
+              authentication
+            </li>
+            <li>This is a test environment - no real OTP will be sent</li>
+            <li>The authentication will fail for any other code</li>
+            <li>You can try multiple times if needed</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const otpInput = document.getElementById("otp");
+      const payButton = document.getElementById("payButton");
+      const dateTimeElement = document.getElementById("currentDateTime");
+      const cancelButton = document.querySelector(".btn-cancel");
+
+      const fallBackRedirectUrl = "{{FALLBACK_REDIRECT_URL}}";
+      const threeDSServerTransID = "{{THREE_DS_SERVER_TRANS_ID}}";
+      const payEndPoint = "{{PAY_ENDPOINT}}";
+
+      cancelButton.addEventListener("click", function () {
+        const form = document.createElement("form");
+        form.method = "POST";
+        form.action = fallBackRedirectUrl;
+        document.body.appendChild(form);
+        form.submit();
+        document.body.removeChild(form);
+      });
+
+      payButton.addEventListener("click", async function () {
+        try {
+          const formData = new URLSearchParams();
+          formData.append("otp", otpInput.value);
+          formData.append("threeDSServerTransID", threeDSServerTransID);
+
+          const response = await fetch(payEndPoint, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/x-www-form-urlencoded",
+            },
+            mode: "no-cors",
+            body: formData.toString(),
+          });
+
+          const form = document.createElement("form");
+          form.method = "POST";
+          form.action = fallBackRedirectUrl;
+          document.body.appendChild(form);
+          form.submit();
+          document.body.removeChild(form);
+        } catch (error) {
+          console.error("Error:", error);
+          const form = document.createElement("form");
+          form.method = "POST";
+          form.action = fallBackRedirectUrl;
+          document.body.appendChild(form);
+          form.submit();
+          document.body.removeChild(form);
+        }
+      });
+
+      function formatDateTime(date) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, "0");
+        const day = String(date.getDate()).padStart(2, "0");
+        const hours = String(date.getHours()).padStart(2, "0");
+        const minutes = String(date.getMinutes()).padStart(2, "0");
+        const seconds = String(date.getSeconds()).padStart(2, "0");
+
+        return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+      }
+
+      dateTimeElement.textContent = formatDateTime(new Date());
+
+      setInterval(() => {
+        dateTimeElement.textContent = formatDateTime(new Date());
+      }, 1000);
+
+      otpInput.addEventListener("input", function () {
+        payButton.disabled = !this.value;
+      });
+
+      document.querySelectorAll(".help-header").forEach((header) => {
+        header.addEventListener("click", () => {
+          const section = header.parentElement;
+          section.classList.toggle("active");
+        });
+      });
+    </script>

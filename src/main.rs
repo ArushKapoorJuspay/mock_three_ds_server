@@ -86,6 +86,7 @@ async fn main() -> std::io::Result<()> {
     println!("   POST /3ds/authenticate");
     println!("   POST /3ds/results");
     println!("   POST /3ds/final");
+    println!("   POST /processor/mock/acs/trigger-otp (ACS Challenge)");
     if settings.performance.enable_metrics {
         println!("   GET  {} (metrics)", settings.monitoring.metrics_endpoint);
     }
@@ -105,6 +106,7 @@ async fn main() -> std::io::Result<()> {
             .route("/3ds/authenticate", web::post().to(handlers::authenticate_handler))
             .route("/3ds/results", web::post().to(handlers::results_handler))
             .route("/3ds/final", web::post().to(handlers::final_handler))
+            .route("/processor/mock/acs/trigger-otp", web::post().to(handlers::acs_trigger_otp_handler))
     })
     .workers(settings.server.workers.unwrap_or(0)) // 0 = use all CPU cores
     .client_request_timeout(Duration::from_millis(settings.performance.client_timeout_ms))

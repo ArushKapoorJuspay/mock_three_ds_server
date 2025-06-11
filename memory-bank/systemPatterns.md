@@ -141,6 +141,20 @@ Request → JSON → Struct → Handler → State → Response → JSON
     └── Actix-web ← HTTP ← JSON ← Struct ← Handler ←┘
 ```
 
+### ACS Challenge Flow Architecture (Latest Addition)
+```
+Client Form POST → creq JSON → ACS Handler → Template System → HTML Response
+    ↑                                                            ↓
+    └── Browser Challenge Flow ← Dynamic URLs ← Server Config ←──┘
+```
+
+**Key Components:**
+- **Form Data Handling:** `web::Form<AcsTriggerOtpRequest>` for creq parameter
+- **JSON Parsing:** Direct parsing of creq (not base64 decode)
+- **Template System:** `templates/acs-challenge.html` with placeholder substitution
+- **Dynamic URLs:** Server configuration-based URL generation
+- **Self-Contained Flow:** No external URL dependencies
+
 ### Dependency Graph
 ```
 main.rs

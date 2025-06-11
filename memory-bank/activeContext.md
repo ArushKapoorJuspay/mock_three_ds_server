@@ -2,24 +2,35 @@
 
 ## Current Work Focus
 
-### Project Journey - DeviceChannel Configuration Update (Latest)
-🎯 **Latest Task:** Update deviceChannel mapping so that '01' represents mobile instead of '02'
-✅ **Delivered:** Complete deviceChannel reconfiguration with updated documentation
+### Project Journey - ACS Challenge Endpoint Implementation (Latest)
+🎯 **Latest Task:** Implement local ACS endpoint to replace hardcoded external URL for Web Challenge flow
+✅ **Delivered:** Complete ACS challenge endpoint with HTML template system and proper creq handling
 
 **Changes Made:**
-- Updated `src/handlers.rs` line 48: `let is_mobile = req.device_channel == "01";`
-- Updated all documentation files with new deviceChannel values:
-  - `DYNAMIC_ACS_SIGNED_CONTENT.md` - Mobile friction flow examples
-  - `README.md` - API documentation examples  
-  - `memory-bank/enhanced-3ds-flows.md` - Testing examples
-  - `memory-bank/progress.md` - Feature descriptions
-  - `memory-bank/techContext.md` - Development workflow examples
+- **New ACS Endpoint**: Added `POST /processor/mock/acs/trigger-otp` handler
+- **HTML Template System**: Created `templates/acs-challenge.html` with complete challenge form
+- **Form Data Handling**: Implemented `AcsTriggerOtpRequest` model for creq parameter
+- **JSON Parsing**: Fixed handler to parse creq as JSON directly (not base64)
+- **Dynamic URL Generation**: Uses server configuration instead of hardcoded localhost:8080
+- **Route Registration**: Added new endpoint to main.rs with updated startup logs
+- **Models Update**: Added Deserialize trait to ChallengeRequest struct
+
+**Implementation Details:**
+- `acs_trigger_otp_handler` in `src/handlers.rs` processes form POST requests
+- Template placeholders: `{{FALLBACK_REDIRECT_URL}}`, `{{THREE_DS_SERVER_TRANS_ID}}`, `{{PAY_ENDPOINT}}`
+- Extracts `threeDSServerTransID` from decoded creq JSON: `{"messageType":"CReq","threeDsServerTransId":"uuid",...}`
+- Returns complete HTML challenge form with modern UI and JavaScript interactions
 
 **Impact:**
-- deviceChannel="01" now triggers mobile flow (with ACS signed content for friction flows)
-- deviceChannel="02" now triggers browser flow (with ACS URL for challenges)
-- All existing functionality preserved, just the channel mapping reversed
-- Documentation consistency maintained across all files
+- Web Challenge flow now entirely self-contained within mock server
+- No dependency on external `integ-expresscheckout-api.juspay.in` URL
+- Dynamic server configuration enables deployment flexibility
+- Complete 3DS authentication experience for testing and development
+- Clean separation of HTML template from handler logic
+
+### Previous Achievement - DeviceChannel Configuration Update
+🎯 **Previous Task:** Update deviceChannel mapping so that '01' represents mobile instead of '02'
+✅ **Delivered:** Complete deviceChannel reconfiguration with updated documentation
 
 ### Previous Achievement - Certificate Security Implementation
 🎯 **Previous Task:** Implement secure certificate management to eliminate private key exposure in Git
