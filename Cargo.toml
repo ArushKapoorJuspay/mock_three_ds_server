@@ -1,0 +1,59 @@
+[package]
+name = "mock_three_ds_server"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+# Core web framework
+actix-web = { version = "4", features = ["compress-gzip", "compress-brotli"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+uuid = { version = "1.6", features = ["v4", "serde"] }
+chrono = { version = "0.4", features = ["serde"] }
+tokio = { version = "1", features = ["full"] }
+base64 = "0.21"
+env_logger = "0.10"
+log = "0.4"
+urlencoding = "2.1"
+
+# Redis with connection pooling
+redis = { version = "0.25", features = ["aio", "tokio-comp"] }
+deadpool-redis = "0.14"
+
+# Configuration and error handling
+async-trait = "0.1"
+thiserror = "1.0"
+config = { version = "0.13", features = ["toml"] }
+
+# Performance monitoring
+actix-web-prom = "0.6"
+prometheus = "0.13"
+
+# Retry and resilience
+backoff = { version = "0.4", features = ["tokio"] }
+
+# Caching
+lru = "0.12"
+
+# Rate limiting
+actix-governor = "0.4"
+governor = "0.6"
+
+# Health checks
+tokio-util = "0.7"
+
+# Cryptography for JWT and key generation
+jsonwebtoken = "9.2"
+p256 = { version = "0.13", features = ["ecdsa", "jwk", "ecdh"] }
+rand_core = { version = "0.6", features = ["std"] }
+pem = "3.0"
+hex = "0.4"
+
+# JWE support for encrypted mobile communication
+josekit = "0.8"
+aes-gcm = "0.10"
+aes = "0.8"
+cbc = "0.1"
+hmac = "0.12"
+hkdf = "0.12"
+sha2 = "0.10"

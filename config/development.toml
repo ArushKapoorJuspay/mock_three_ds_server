@@ -1,0 +1,53 @@
+# Development configuration for 3DS Mock Server
+
+[server]
+host = "127.0.0.1"
+port = 8080
+log_level = "debug"
+workers = 1
+
+[redis]
+url = "redis://127.0.0.1:6379"
+ttl_seconds = 1200  # 20 minutes for realistic testing workflows
+key_prefix = "3ds_transaction"
+
+[redis.connection]
+timeout_ms = 5000
+max_retries = 3
+retry_delay_ms = 1000
+
+[redis.pool]
+max_size = 10
+min_idle = 2
+connection_timeout_seconds = 10
+idle_timeout_seconds = 300
+
+# Performance optimizations (reduced for development)
+[performance]
+enable_compression = false
+enable_metrics = true
+cache_size = 1000
+rate_limit_per_second = 100
+max_connections = 1000
+client_timeout_ms = 120000
+keep_alive_seconds = 60
+
+# Monitoring configuration
+[monitoring]
+metrics_endpoint = "/metrics"
+health_endpoint = "/health"
+enable_tracing = false
+request_timeout_seconds = 60
+
+# Retry configuration
+[retry]
+max_attempts = 2
+initial_delay_ms = 50
+max_delay_ms = 2000
+multiplier = 1.5
+
+# Cache configuration
+[cache]
+card_range_ttl_seconds = 1800
+challenge_decision_ttl_seconds = 180
+static_response_ttl_seconds = 3600

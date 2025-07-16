@@ -1,0 +1,25 @@
+/target
+
+# Configuration
+config/local.toml
+config/secret.toml
+*.local.toml
+
+# Keep example files
+!config/default.toml
+!config/development.toml
+!config/production.toml
+
+# Certificates and private keys (security)
+certs/
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+*.der
+*.csr
+
+# Keep certificate examples and documentation
+!certs.example/
+!certs.example/**
